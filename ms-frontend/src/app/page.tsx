@@ -18,9 +18,9 @@ export default function Home() {
             <p className="text-xs text-muted-foreground">Early Detection of Multiple Sclerosis (MS)</p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        {/* <div className="flex items-center gap-4">
           <span className="text-sm">Welcome, Dr. Radwan</span>
-        </div>
+        </div> */}
       </header>
 
       {/* Main Content */}
@@ -106,7 +106,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* File Upload Section */}
               <div className="mt-6 space-y-2">
                 <label className="text-sm font-medium">Upload MRI Scan</label>
                 <div className="flex flex-col items-center justify-center rounded-md border-2 border-dashed p-6">
@@ -114,15 +113,15 @@ export default function Home() {
                   <p className="mb-2 text-sm text-muted-foreground">Drag and drop or click to upload</p>
                   <p className="mb-4 text-xs text-muted-foreground">Supported formats: DICOM, JPG, PNG</p>
                   <div className="relative">
+                    <label htmlFor="file-upload" className="relative z-10 cursor-pointer">
+                      <Button variant="outline" size="sm">Select File</Button>
+                    </label>
                     <Input
                       type="file"
                       id="file-upload"
-                      className="cursor-pointer opacity-0 absolute inset-0 w-full h-full"
+                      className="absolute inset-0 w-full h-full cursor-pointer opacity-0"
                       accept=".dcm,.jpg,.jpeg,.png"
                     />
-                    <Button variant="outline" size="sm" className="relative z-10">
-                      Select File
-                    </Button>
                   </div>
                 </div>
               </div>

@@ -1,0 +1,30 @@
+:host {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  background-color: var(--clr-overlay);
+  border-radius: 10px;
+  border: 1px solid var(--clr-iris);
+}
+
+.result-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  background-color: var(--clr-overlay);
+  border-radius: 10px;
+  border: 1px solid var(--clr-iris);
+}

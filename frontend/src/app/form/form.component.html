@@ -1,0 +1,29 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <mat-form-field>
+    <mat-label>Age</mat-label>
+    <input mat-input type="number" formControlName="age" />
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Gender</mat-label>
+    <input mat-input type="text" formControlName="gender" />
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Symptoms</mat-label>
+    <textarea mat-input formControlName="symptoms"></textarea>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Upload an image</mat-label>
+    <input type="file" formControlName="image" />
+  </mat-form-field>
+  <button type="submit">Submit</button>
+</form>
+
+<div class="result-container">
+  <h3>Diagnosis Results</h3>
+  <h4>AI-assisted analysis of patient data</h4>
+  @if (result) {
+  <p>{{ result }}</p>
+  } @else {
+  <p>No results yet</p>
+  }
+</div>

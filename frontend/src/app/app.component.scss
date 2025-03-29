@@ -1,0 +1,17 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+app-header {
+  flex: 0 1 auto;
+}
+
+app-form {
+  flex: 1 1 auto;
+}
+
+app-footer {
+  flex: 0 1 auto;
+}

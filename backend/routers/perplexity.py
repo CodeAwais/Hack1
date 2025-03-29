@@ -14,6 +14,9 @@ class DetailsRequest(BaseModel):
     age : int
     gender : str
     symptoms : list[str] = []
+    family_history : bool
+    smoking_history : bool
+    epstein_barr_virus : bool
 
 
 @router.post("/")
@@ -33,13 +36,14 @@ def generate_report(request: DetailsRequest):
             f"Generate a detailed report for the patient with the following details: "
             f"The age of the patient is {request.age} and the gender is {request.gender}."
             f"The MRI scan suggests {request.label} with {request.confidence}% for confidence."
-            f"and the symptoms the patient reported are {symptoms_str} \n\n"
+            f"and the symptoms the patient reported are {symptoms_str}"
+            f"The patient's family history is (true/false): {request.family_history} "
+            f"The patient's smoking history is (true/false): {request.smoking_history}"
+            f"The patitent has epstein barr virus (true/false): {request.epstein_barr_virus}"
             f"Add the following sections to the report: "
-            f"1. Patient Summary\n"
-            f"2. Risk Assessment\n"
-            f"3. Explanation of the findings in layman's terms\n"
-            f"4. Key MRI features that support the diagnosis\n"
-            f"5. A visual 'Severity Risk Meter' using emojis and a pointer based on the confidence score\n"
+            f"1. Patient Summary"
+            f"2. Risk Assessment"
+            f"3. Key MRI features that support the diagnosis"
             f"Be medically accurate and use plain language."
 
         )
@@ -50,7 +54,7 @@ def generate_report(request: DetailsRequest):
         }
 
         body = {
-            "model" : "sonar", # add the correct model name here
+            "model" : "sonar", 
             "messages" : [
                 {
                     "role" : "user",

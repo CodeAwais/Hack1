@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import prediction, perplexity
+from routers import perplexity
 
 app = FastAPI(
     title="Multiple Sclerosis Detector",
@@ -20,7 +20,6 @@ app.add_middleware(
     allow_headers=["*"], #allow all headers
 )
 
-app.include_router(prediction.router, prefix="/api/predict", tags=["Prediction"])
 app.include_router(perplexity.router, prefix="/api/perplexity", tags=["Perplexity Insights"])
 
 @app.get("/")

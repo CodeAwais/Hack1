@@ -1,78 +1,135 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-import requests
+import cv2
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi.responses import JSONResponse
+
+import tempfile
 import os
+import numpy as np
+import torch
+import torch.nn as nn
+from torchvision import models, transforms
+import pydicom
 from dotenv import load_dotenv
+import requests
 
-load_dotenv() #load the environment variables
-
+load_dotenv()
 router = APIRouter()
 
-class DetailsRequest(BaseModel):
-    label : str
-    confidence : float
-    age : int
-    gender : str
-    symptoms : list[str] = []
-    family_history : bool
-    smoking_history : bool
-    epstein_barr_virus : bool
+
+# === MSClassifier ===
+class MSClassifier(nn.Module):
+    def __init__(self):
+        super(MSClassifier, self).__init__()
+        self.resnet = models.resnet50(pretrained=False)
+        self.resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        num_features = self.resnet.fc.in_features
+        self.resnet.fc = nn.Sequential(
+            nn.Linear(num_features, 512),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(256, 1),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        return self.resnet(x)
+
+
+# === Load DICOM Image ===
+def load_dicom(path):
+    dicom = pydicom.dcmread(path)
+    img = dicom.pixel_array
+    img = cv2.resize(img, (224, 224))
+    img = img / np.max(img)
+    return img
 
 
 @router.post("/")
-def generate_report(request: DetailsRequest):
+async def predict_and_generate_report(
+    file: UploadFile = File(...),
+    age: int = Form(...),
+    gender: str = Form(...),
+    symptoms: list[str] = Form([]),
+    family_history: bool = Form(False),
+    smoking_history: bool = Form(False),
+    epstein_barr_virus: bool = Form(False)
+):
     try:
-        api_key = os.getenv("PERPLEXITY_API_KEY")
-        if not api_key:
-            raise HTTPException(status_code=500, detail="Perplexity API Key is not set or invalid")
+        # Check for DICOM
+        if not file.filename.lower().endswith((".dcm", ".dicom")):
+            raise HTTPException(status_code=400, detail="Only DICOM (.dcm) files are supported.")
 
+        # Save temp file
+        image_data = await file.read()
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".dcm") as tmp:
+            tmp.write(image_data)
+            tmp_path = tmp.name
 
-        symptoms_str = ""
-        if request.symptoms:
-            symptoms_str = " The patient has the following symptoms " + ", ".join(request.symptoms) + "."
-        
+        # Load and preprocess image
+        img = load_dicom(tmp_path)
+        img_tensor = torch.from_numpy(img).float().unsqueeze(0).unsqueeze(0)
+        normalize = transforms.Normalize(mean=[0.5], std=[0.5])
+        img_tensor = normalize(img_tensor)
 
+        # Load model
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        model = MSClassifier().to(device)
+        model_path = os.path.join(os.path.dirname(__file__), 'best_ms_classifier1.pth')
+        model.load_state_dict(torch.load(model_path, map_location=device))
+        model.eval()
+
+        # Predict
+        with torch.no_grad():
+            output = model(img_tensor.to(device))
+            probability = output.item()
+
+        diagnosis = "Multiple Sclerosis" if probability > 0.5 else "Healthy"
+        confidence = round(probability * 100 if probability > 0.5 else (1 - probability) * 100, 2)
+
+        # 🔥 Generate prompt for Perplexity
+        symptom_str = ", ".join(symptoms) if symptoms else "none"
         prompt = (
-            f"Generate a detailed report for the patient with the following details: "
-            f"The age of the patient is {request.age} and the gender is {request.gender}."
-            f"The MRI scan suggests {request.label} with {request.confidence}% for confidence."
-            f"and the symptoms the patient reported are {symptoms_str}"
-            f"The patient's family history is (true/false): {request.family_history} "
-            f"The patient's smoking history is (true/false): {request.smoking_history}"
-            f"The patitent has epstein barr virus (true/false): {request.epstein_barr_virus}"
-            f"Add the following sections to the report: "
+            f"Generate a detailed medical report for a {age}-year-old {gender} patient. "
+            f"The MRI scan suggests {diagnosis} with {confidence}% confidence. "
+            f"Symptoms reported: {symptom_str}. "
+            f"Family history of MS: {family_history}. "
+            f"Smoking history: {smoking_history}. "
+            f"Epstein-Barr virus: {epstein_barr_virus}."
+            f"Include the following sections:"
             f"1. Patient Summary"
             f"2. Risk Assessment"
             f"3. Key MRI features that support the diagnosis"
-            f"Be medically accurate and use plain language."
-
+            f"Use plain language but remain medically accurate."
         )
 
+        # Call Perplexity API
+        perplexity_api_key = os.getenv("PERPLEXITY_API_KEY")
         headers = {
-            "Authorization": f"Bearer {api_key}",
+            "Authorization": f"Bearer {perplexity_api_key}",
             "Content-Type": "application/json"
         }
 
         body = {
-            "model" : "sonar", 
-            "messages" : [
-                {
-                    "role" : "user",
-                    "content" : prompt
-                }
+            "model": "sonar",
+            "messages": [
+                {"role": "user", "content": prompt}
             ]
         }
 
         response = requests.post("https://api.perplexity.ai/chat/completions", headers=headers, json=body)
-
         if response.status_code != 200:
-            raise HTTPException(status_code=500, detail=f"API request failed! {response.text}")
+            raise HTTPException(status_code=500, detail=f"Perplexity API error: {response.text}")
 
-        
-        data = response.json()
-        content = data.get("choices")[0].get("message").get("content")
+        summary = response.json()["choices"][0]["message"]["content"]
 
-        return {"summary" : content}
+        return {
+            "diagnosis": diagnosis,
+            "confidence": confidence,
+            "summary": summary
+        }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

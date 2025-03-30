@@ -1,0 +1,12 @@
+fastapi                  # Web framework
+uvicorn                  # ASGI server to run FastAPI
+pydantic                 # Data validation
+python-multipart         # For handling file uploads
+pydicom                  # For reading DICOM (.dcm) files
+opencv-python            # For image processing
+torch                    # PyTorch, your ML model uses this
+torchvision              # Required with torch (for ResNet50)
+requests                 # For making external API calls (Perplexity API)
+python-dotenv            # Load .env for API keys, secrets
+matplotlib               # Optional - if used for visualization
+pillow                   # Optional - if images are saved/displayed

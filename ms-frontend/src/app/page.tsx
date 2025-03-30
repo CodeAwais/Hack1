@@ -22,10 +22,11 @@ export default function Home() {
   const [patientInfo, setPatientInfo] = useState({
     age: "40",
     sex: "male",
-    relative: "no",
+    symptoms: "blurry eyesight",
+    family_history: "no",
     weight: "60",
     region: "North America",
-    smoking: "yes",
+    smoking_history: "yes",
     ebv: "yes",
   });
 
@@ -34,9 +35,9 @@ export default function Home() {
   const [fileName, setFileName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [diagnosis, setDiagnosis] = useState<{
-    riskLevel?: string;
-    report?: string;
-    recommendations?: string[];
+    diagnosis?: string;
+    confidence?: string;
+    summary?: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,7 +91,7 @@ export default function Home() {
         formData.append(key, value);
       });
 
-      const response = await fetch("http://localhost:8000/api/perplexity", {
+      const response = await fetch("http://localhost:8000/api/perplexity/", {
         method: "POST",
         body: formData,
       });
@@ -172,8 +173,8 @@ export default function Home() {
                 Do you have a relative with multiple sclerosis?
               </label>
               <Select 
-                value={patientInfo.relative} 
-                onValueChange={(value) => handleInputChange("relative", value)}
+                value={patientInfo.family_history} 
+                onValueChange={(value) => handleInputChange("family_history", value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Yes/No" />
@@ -207,8 +208,8 @@ export default function Home() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Smoking History</label>
               <Select 
-                value={patientInfo.smoking} 
-                onValueChange={(value) => handleInputChange("smoking", value)}
+                value={patientInfo.smoking_history} 
+                onValueChange={(value) => handleInputChange("smoking_history", value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select" />
@@ -313,13 +314,13 @@ export default function Home() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Risk Level:</span>
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    diagnosis.riskLevel === "High" 
+                    diagnosis.diagnosis === "High" 
                       ? "bg-red-100 text-red-700" 
-                      : diagnosis.riskLevel === "Medium" 
+                      : diagnosis.diagnosis === "Medium" 
                         ? "bg-yellow-100 text-yellow-700" 
                         : "bg-green-100 text-green-700"
                   }`}>
-                    {diagnosis.riskLevel || "Unknown"}
+                    {diagnosis.diagnosis || "Unknown"}
                   </span>
                 </div>
               </div>
@@ -327,7 +328,7 @@ export default function Home() {
               <div className="space-y-3">
                 <h3 className="text-md font-medium">Analysis Report</h3>
                 <div className="rounded-md bg-slate-50 p-4">
-                  <p className="text-sm">{diagnosis.report || "No detailed report available."}</p>
+                  <p className="text-sm">{diagnosis.confidence || "No detailed report available."}</p>
                 </div>
               </div>
 
@@ -335,14 +336,9 @@ export default function Home() {
                 <h3 className="text-md font-medium">Recommendations</h3>
                 <div className="rounded-md bg-slate-50 p-4">
                   <ul className="space-y-2 text-sm">
-                    {diagnosis.recommendations ? (
-                      diagnosis.recommendations.map((rec, idx) => (
-                        <li key={idx} className="flex items-start">
-                          <span className="mr-2 text-slate-600">•</span>
-                          <span>{rec}</span>
-                        </li>
-                      ))
-                    ) : (
+                    {diagnosis.summary ? (
+                      <span>{diagnosis.summary}</span>)
+                     : (
                       <li>No recommendations available.</li>
                     )}
                   </ul>

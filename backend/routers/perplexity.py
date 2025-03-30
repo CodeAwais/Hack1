@@ -51,11 +51,11 @@ def load_dicom(path):
 async def predict_and_generate_report(
     file: UploadFile = File(...),
     age: int = Form(...),
-    gender: str = Form(...),
+    sex: str = Form(...),
     symptoms: list[str] = Form([]),
-    family_history: bool = Form(False),
-    smoking_history: bool = Form(False),
-    epstein_barr_virus: bool = Form(False)
+    family_history: str = Form(False),
+    smoking_history: str = Form(False),
+    ebv: str = Form(False)
 ):
     try:
         # Check for DICOM
@@ -92,12 +92,12 @@ async def predict_and_generate_report(
         # 🔥 Generate prompt for Perplexity
         symptom_str = ", ".join(symptoms) if symptoms else "none"
         prompt = (
-            f"Generate a detailed medical report for a {age}-year-old {gender} patient. "
+            f"Generate a detailed medical report for a {age}-year-old {sex} patient. "
             f"The MRI scan suggests {diagnosis} with {confidence}% confidence. "
             f"Symptoms reported: {symptom_str}. "
             f"Family history of MS: {family_history}. "
             f"Smoking history: {smoking_history}. "
-            f"Epstein-Barr virus: {epstein_barr_virus}."
+            f"Epstein-Barr virus: {ebv}."
             f"Include the following sections:"
             f"1. Patient Summary"
             f"2. Risk Assessment"

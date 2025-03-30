@@ -52,7 +52,7 @@ async def predict_and_generate_report(
     file: UploadFile = File(...),
     age: int = Form(...),
     sex: str = Form(...),
-    symptoms: list[str] = Form([]),
+    symptoms: str = Form(...),
     family_history: str = Form(False),
     smoking_history: str = Form(False),
     ebv: str = Form(False)
@@ -68,6 +68,7 @@ async def predict_and_generate_report(
             tmp.write(image_data)
             tmp_path = tmp.name
 
+        print(f"age: {age}, sex: {sex}, symptoms: {symptoms}, family_history: {family_history}, smoking_history: {smoking_history}, ebv: {ebv}")
         # Load and preprocess image
         img = load_dicom(tmp_path)
         img_tensor = torch.from_numpy(img).float().unsqueeze(0).unsqueeze(0)
@@ -86,23 +87,24 @@ async def predict_and_generate_report(
             output = model(img_tensor.to(device))
             probability = output.item()
 
-        diagnosis = "Multiple Sclerosis" if probability > 0.5 else "Healthy"
+        diagnosis = "Likely Multiple Sclerosis" if probability > 0.5 else "Healthy"
         confidence = round(probability * 100 if probability > 0.5 else (1 - probability) * 100, 2)
 
         # 🔥 Generate prompt for Perplexity
         symptom_str = ", ".join(symptoms) if symptoms else "none"
         prompt = (
-            f"Generate a detailed medical report for a {age}-year-old {sex} patient. "
-            f"The MRI scan suggests {diagnosis} with {confidence}% confidence. "
-            f"Symptoms reported: {symptom_str}. "
+            f"Generate a concise medical report for a {age}-year-old {sex} patient. "
+            f"The MRI scan analysis indicates: {diagnosis} with {confidence}% confidence. "
+            f"Symptoms: {symptom_str}. "
             f"Family history of MS: {family_history}. "
             f"Smoking history: {smoking_history}. "
-            f"Epstein-Barr virus: {ebv}."
-            f"Include the following sections:"
-            f"1. Patient Summary"
-            f"2. Risk Assessment"
-            f"3. Key MRI features that support the diagnosis"
-            f"Use plain language but remain medically accurate."
+            f"Epstein-Barr virus history: {ebv}. "
+            f"FORMAT: Provide three short paragraphs only: "
+            f"1) Patient Summary (2-3 sentences about patient profile and symptoms) "
+            f"2) Key MRI Features (2-3 sentences about imaging findings) "
+            f"3) Recommendations (2-3 sentences with next steps) "
+            f"IMPORTANT: Return plain text only. NO markdown formatting, NO bullet points, NO headers, NO asterisks. "
+            f"Keep the entire response under 250 words. Be direct and concise."
         )
 
         # Call Perplexity API

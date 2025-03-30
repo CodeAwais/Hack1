@@ -1,4 +1,4 @@
-# MSDetect: Early Detection Web Application for Multiple Sclerosis
+# MSDetect: Early Detection of Multiple Sclerosis
 
 ## Overview
 

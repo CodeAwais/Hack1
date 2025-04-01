@@ -24,10 +24,10 @@ export default function Home() {
     age: "40",
     sex: "female",
     symptoms: "",
-    family_history: "no",
+    family_history: "yes",
     weight: "60",
     region: "North America",
-    smoking_history: "yes",
+    smoking_history: "no",
     ebv: "yes",
   });
 

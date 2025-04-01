@@ -68,7 +68,6 @@ async def predict_and_generate_report(
             tmp.write(image_data)
             tmp_path = tmp.name
 
-        print(f"age: {age}, sex: {sex}, symptoms: {symptoms}, family_history: {family_history}, smoking_history: {smoking_history}, ebv: {ebv}")
         # Load and preprocess image
         img = load_dicom(tmp_path)
         img_tensor = torch.from_numpy(img).float().unsqueeze(0).unsqueeze(0)
@@ -89,14 +88,17 @@ async def predict_and_generate_report(
 
         diagnosis = "Likely Multiple Sclerosis" if probability > 0.5 else "Healthy"
         confidence = round(probability * 100 if probability > 0.5 else (1 - probability) * 100, 2)
+        print(f"age: {age}, sex: {sex}, symptoms: {symptoms}, family_history: {family_history}, smoking_history: {smoking_history}, ebv: {ebv} \
+            diagnosis: {diagnosis}, confidence: {confidence}")
+
 
         # 🔥 Generate prompt for Perplexity
         symptom_str = ", ".join(symptoms) if symptoms else "none"
         prompt = (
             f"Generate a concise medical report for a {age}-year-old {sex} patient. "
-            f"The MRI scan analysis indicates: {diagnosis} with {confidence}% confidence. "
+            f"The MRI scan passed through a CNN model indicates: {diagnosis} with {confidence}% confidence. "
             f"Symptoms: {symptom_str}. "
-            f"Family history of MS: {family_history}. "
+            f"Has a family member with MS: {family_history}. "
             f"Smoking history: {smoking_history}. "
             f"Epstein-Barr virus history: {ebv}. "
             f"FORMAT: Provide three short paragraphs only: "

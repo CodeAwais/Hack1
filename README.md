@@ -1,4 +1,4 @@
-# MSDetect: Early Detection Web Application for Multiple Sclerosis
+# MSDetect: Early Detection of Multiple Sclerosis
 
 ## Overview
 
@@ -8,8 +8,8 @@ MSDetect is a web application designed for the early detection of Multiple Scler
 
 ## Features
 
-- **MRI Scan Analysis:** Accepts MRI scans as input (DICOM, JPG, JPEG, PNG) to analyze for potential indicators of MS.
-- **AI-Powered Prediction:** Employs a pre-trained ResNet50-based deep learning model to predict the likelihood of MS presence based on the uploaded MRI scan.
+- **MRI Scan Analysis:** Accepts MRI scans as input (DICOM, DCM) to analyze for potential indicators of MS.
+- **AI-Powered Prediction:** Employs a ResNet50 deep learning model fine-tuned with MRI files of healthy people and patients with MS to predict the likelihood of MS presence based on the uploaded MRI scan.
 - **Patient Details Input:** Allows users to input additional information such as age, gender, symptoms, family history, smoking history, and Epstein-Barr virus (EBV) status to refine the analysis.
 - **AI Report Generation:** Integrates with the Perplexity AI API to generate a comprehensive report summarizing the findings and providing potential risk assessments based on the MRI analysis and inputted patient details.
 - **User-Friendly Interface:** Features a clean and intuitive web interface for easy navigation and data input.
@@ -27,7 +27,7 @@ MSDetect is a web application designed for the early detection of Multiple Scler
   - OpenCV (Library for image processing)
   - Requests (Library for making HTTP requests)
 - **AI Services:**
-  - Perplexity AI API (For report generation)
+  - Perplexity AI API (For combination of model output and form input to generate a report)
 
 ## Setup and Installation
 
